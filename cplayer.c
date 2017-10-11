@@ -44,37 +44,42 @@ double tvdiff_secs(struct timeval newer, struct timeval older)
 
 int main(int argc, char **argv)
 {
-    CURL *curl;
-    CURLcode res;
-    int stall_count = 0;
-    double *avg_window = (double *)malloc(AVERAGE_WINDOW_SIZE * sizeof(double));
-    int j;
-    for (j = 0; j < AVERAGE_WINDOW_SIZE; j++)
-    {
-        avg_window[j] = 0.0;
-    }
-    int current_index;
-    int segment_count_i;
-    struct timeval beg, end, last_load, former_last_load;
-    double elapsed, startup_time, buffer_time, time_from_last_load, stall_len, bitrate;
     int i = 1; 
+    int j;
+    int segment_count_i;
+    int current_index;
+
+    int stall_count = 0;
+    double elapsed, startup_time, buffer_time, time_from_last_load, stall_len, bitrate;
+
+    // Initialize avg_window
+    double *avg_window = (double *)malloc(AVERAGE_WINDOW_SIZE * sizeof(double));
+    for (j = 0; j < AVERAGE_WINDOW_SIZE; j++)
+        avg_window[j] = 0.0;
+
+    struct timeval beg, end, last_load, former_last_load;
     if (argc < 5)
     {
         printf("usage: cplayer <destination> <video_id> <segment_count> <uuid>\n:");
         return(-1);
     }
-    double volume;
-    double ttime;
+
+    // Arguments
     char *destination = argv[1];
     char *video_id = argv[2];
     char *segment_count = argv[3];
     char *uuid = argv[4];
+
     segment_count_i = atoi(segment_count);
-    char url[200];
+
+    double volume;
+    double ttime;
+
     char resolution[5];
     resolution[0] = '\0';
     strcat(resolution, "360");
     strcat(resolution, "\0");
+
     char filename[80];
     filename[0] = '\0';
     strcat(filename, "videologs/");
@@ -82,7 +87,11 @@ int main(int argc, char **argv)
     strcat(filename, ".log");
     strcat(filename, "\0");
     FILE *flog = fopen(filename, "wb");
-    curl = curl_easy_init();
+
+    CURL * curl = curl_easy_init();
+    CURLcode res;
+
+    char url[200];
     if(curl) 
     {
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
@@ -137,7 +146,6 @@ int main(int argc, char **argv)
             //printf("%lf %lf %lf\n", volume, ttime, bitrate);
             fprintf(flog, "%lf;%d;%s;%lf;%lf;%lf\n", elapsed, i, resolution, ref, local_avg, bitrate);
             fflush(flog);
-
 
             if (ref <= 1200000)
             {
